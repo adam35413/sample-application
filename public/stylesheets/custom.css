@@ -176,3 +176,13 @@ div.field, div.actions {
   font-size: 12px;
   list-style: square;
 }
+
+/* User index page */
+
+ul.users {
+  margin-top: 1em;
+}
+
+.users li {
+  list-style: none;
+}
