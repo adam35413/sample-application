@@ -8,5 +8,5 @@
 <% end %>
 <div>
   <%= gravatar_for @user %>
-  <a href="http://gravatar.com/emails">Change</a>
+  <%= link_to "Change", "http://gravatar.com/emails", :target => "_blank" %>
 </div>

@@ -9,30 +9,39 @@ class UsersController < ApplicationController
     end
     def show
       @user = User.find(params[:id])
+      @microposts = @user.microposts.paginate(:page => params[:page])
       @title = @user.name
     end
 
     def new
-      @title = "Sign up"
-      @user = User.new
+      if current_user.nil?
+        @title = "Sign up"
+        @user = User.new
+      else
+        redirect_to(root_path)
+      end
     end
 
     def create
-      @user = User.new(params[:user])
-      if @user.save
-        flash[:success] = "Welcome to the Sample App!"
-        sign_in @user
-        redirect_to @user
+      if current_user.nil?
+        @user = User.new(params[:user])
+        if @user.save
+          flash[:success] = "Welcome to the Sample App!"
+          sign_in @user
+          redirect_to @user
+        else
+          @title = "Sign up"
+          @user.password = ""
+          @user.password_confirmation = ""
+          render 'new'
+        end
       else
-        @title = "Sign up"
-        @user.password = ""
-        @user.password_confirmation = ""
-        render 'new'
+        redirect_to(root_path)
       end
     end
 
     def edit
-      @title = "Edit user"
+        @title = "Edit user"
     end
 
     def update
@@ -47,17 +56,19 @@ class UsersController < ApplicationController
     end
   
     def destroy
-      User.find(params[:id]).destroy
-      flash[:success] = "Successfully deleted."
-      redirect_to users_path
+      @user = User.find(params[:id])
+      if !@user.admin?
+        @user.destroy
+        flash[:success] = "Successfully deleted."
+        redirect_to users_path
+      else
+        flash[:error] = "You are an admin; you can't delete yourself!"
+        redirect_to users_path
+      end
     end
   
     private
       
-      def authenticate
-        deny_access unless signed_in?
-      end
-
       def correct_user
         @user = User.find(params[:id])
         redirect_to(root_path) unless current_user?(@user)
