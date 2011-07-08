@@ -19,6 +19,12 @@ class User < ActiveRecord::Base
     has_many :relationships, :foreign_key => "follower_id",
                              :dependent => :destroy
     has_many :following, :through => :relationships, :source => :followed
+    
+    has_many :reverse_relationships, :foreign_key => "followed_id",
+                             :class_name => "Relationship",
+                             :dependent => :destroy
+    
+    has_many :followers, :through => :reverse_relationships, :source => :follower
 
     email_regex = /\A[\w+\-.]+@[a-z\d\-.]+\.[a-z]+\z/i
 
@@ -34,6 +40,9 @@ class User < ActiveRecord::Base
                          :length   => { :within => 6..40 }
 
     before_save :encrypt_password
+
+    ## Scope ##
+    scope :admin, where(:admin => true)
 
 
     def has_password?(submitted_password)
@@ -52,7 +61,7 @@ class User < ActiveRecord::Base
     end
 
     def feed
-      Micropost.where("user_id = ?", id)
+      Micropost.from_users_followed_by(self).shuffle
     end
 
     def following?(followed)
